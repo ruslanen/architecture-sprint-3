@@ -1,0 +1,29 @@
+@startuml
+title Диаграмма компонентов сервиса управления отоплением
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(HeatManagementService, "Сервис управления отоплением") {
+  Container(WebApp, "Веб приложение", "Java, Spring", "Осуществляет менеджмент каждого доступного настроенного реле отопления")
+  Container(OLTPDatabase, "База данных", "PostgreSQL", "Хранит данные об устройствах")
+  Container(OLAPDatabase, "База данных", "ClickHouse", "Хранит данные о метриках с датчиков")
+}
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(DeviceController, "DeviceController", "Обрабатывает запросы на управление отоплением")
+  Component(MetricsController, "MetricsController", "Обрабатывает запросы на получение метрик")
+  Component(ServiceLayer, "Service Layer", "Бизнес-логика")
+  Component(DeviceRepository, "Device Repository Layer", "Логика доступа к данным")
+  Component(MetricsRepository, "Metrics Repository Layer", "Логика доступа к данным")
+}
+
+Rel(DeviceController,ServiceLayer,"Вызывает бизнес логику")
+Rel(MetricsController,ServiceLayer,"Вызывает бизнес логику")
+Rel(ServiceLayer,DeviceRepository,"Записывает/читает данные")
+Rel(ServiceLayer,MetricsRepository,"Записывает/читает данные")
+Rel(DeviceRepository,OLTPDatabase,"Записывает/читает данные устройств")
+Rel(MetricsRepository,OLAPDatabase,"Записывает/читает данные устройств")
+
+@enduml
