@@ -1,0 +1,55 @@
+@startuml
+
+entity "User" as user {
+  *id : INTEGER
+  --
+  name : TEXT
+  birth_date : DATE
+  city : TEXT
+}
+
+entity "Device Type" as device_type {
+  *id : INTEGER
+  --
+  type_name : TEXT
+}
+
+entity "Device" as device {
+  *serial_number : TEXT
+  --
+  type_id : INTEGER
+  name : TEXT
+  description : TEXT
+  manufacturer : TEXT
+  house_id : INTEGER
+  registration_date : TIMESTAMP
+}
+
+entity "House" as house {
+  *id : INTEGER
+  --
+  address : TEXT
+  creation_date : TIMESTAMP
+}
+
+entity "User-House" as user_house {
+  *user_id : INTEGER
+  *house_id : INTEGER
+}
+
+entity "Telemetry" as telemetry {
+  *device_sn : TEXT
+  *event_time : TIMESTAMP
+  --
+  event_type : TEXT
+  value : FLOAT
+  level : TEXT
+}
+
+' Relationships
+device_type ||--o{ device : typed_as
+house ||--o{ device : contains
+user ||--o{ user_house : lives_in
+house ||--o{ user_house : has
+device ||--o{ telemetry : reports
+@enduml

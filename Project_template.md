@@ -110,15 +110,84 @@
 
 # Задание 3. Разработка ER-диаграммы
 
-Добавьте сюда ER-диаграмму. Она должна отражать ключевые сущности системы, их атрибуты и тип связей между ними.
+## Уточнения и допущения
 
-Четвёртое задание — дополнительное. Его можно сделать по желанию. Чтобы ревьюер быстрее проверил ваше решение, укажите, сделали вы это задание или нет. Для этого оставьте нужный эмодзи около заголовка задания:
+1. Не понял разницы между терминологией "устройство" и "модуль". В задании в одном месте оно трактуется как одно и то же, а в другом месте как будто разные понятия. По итогу мною сделано допущние, что устройство и модуль несут в себе один и тот же бизнес-смысл.
 
-✅ — вы выполнили задание.
+Принятое определение: устройство (или модуль) - это физический элемент системы "Теплый дом", способный подключаться по проводному или беспроводному соединению, решающий одну специализированную задачу: мониторинг, переключение (из одного состояния в другое) или управление чем-либо. Например: умная розетка,  робот-пылесос, видеодомофон, датчик света, реле отопления и т.п.
 
-❌ — вы пропустили задание.
+2. Как было указано ранее в основных идеях и мыслях: сделано допущение, что устройства работают без шлюза на стороне клиента, используя прямое подключение к серверу "Теплый дом". Более сложная реализация предполагает наличие дополнительного устройства на стороне клиента компании - шлюза для всех устройств (типа Zigbee).
 
-# ✅ ❌ Задание 4. Создание и документирование API
+## Основные выделенные сущности 
+
+1. user (Пользователь)
+
+    Информация о пользователе, подключенного к системе "Теплый дом". В данном случае это клиент компании.
+
+2. device (Устройство)
+
+    Информация об устройстве. Например:
+
+3. device_type - Тип устройства
+
+    Обычный enum. Примеры значений: "smart_socket", "motion_sensor", "light_controller" и т.п.
+
+4. house - Дом
+
+    Информация о подключаемом доме.
+
+5. user_house - Пользователь-Дом
+
+    Маппинг пользователей и домов. Связь многие-ко-многим между пользователями и домами. Один пользователь может иметь доступ к нескольким домам, и в одном доме может быть несколько пользователей.
+
+6. telemetry - Телеметрия
+
+    Для хранения метрик, событий по каждому устройству. Для хранения телеметрии предполагается использование колоночной СУБД (ClickHouse) по ряду причин:
+    - событий очень много (потенциально большие таблицы)
+    - запросов на чтение очень много, причем запросы предполагаются аналитические, для такого сценрия больше подходят OLAP СУБД
+
+### user
+- id - идентификатор (PK)
+- name - имя
+- birth_date - дата рождения
+- city - город
+
+### device
+- serial_number - серийный номер (PK)
+- type_id - FK (device_type)
+- name - имя устройства
+- description - описание устройства 
+- manufacturer - производитель устройства
+- house_id FK (house)
+- registration_date - дата регистрации в системе
+
+### device_type
+- id - идентификатор (PK)
+- type_name - имя типа
+
+### house
+- id - идентификатор (PK)
+- address - адрес
+- creation_date - дата создания
+
+### user_house
+- user_id FK (user)
+- house_id FK (house)
+PK (user_id, house_id) - составной ключ
+
+### telemetry
+- device_sn FK (device)
+- event_time - дата/время события
+- event_type - тип события (например: "temperature", "light_lux", "battery_level" и т.п.)
+- value - измеренное значение (десятичное число)
+- level - уровень (например: "low", "normal", "critical" и т.п.)
+PK (device_sn, event_time) - составной ключ
+
+[ER-диаграмма](https://editor.plantuml.com/uml/XPFVIiCm5CRl-nHXDyAWBz2h3LPru5Hc1Ez2rXnj84rBSbeOc-zkahLhMXtUZ7xd9B_l_CbM5hd1jb990Xeb7idYtO9P46v9wpx8AI5aAGN9oFQPvW_vtkaqTJ-QL-2YDF-WJXsamP89ZZwsMTFSnGgFwqzyZ_mDTB80GeyD11iHD4EdRxlvB8ijVm4ZrWNZgfTSCTrM1zV7jT8HD_EPDYJ05aOsA6iz1YkksqzUO6jYObcxISrf1hwaHSCzO9WBtUxoDxhUlSRLF_hReVZ0kJq2BeG1QqVVmi3_UB_DTFJmEsMHKT0pj-KV3KL42WegG7CCG1pKXTSlqqP3MqBdhZAKrRJ8lgq-wxT_lT9nrNfv__IozbgvGohQ_1tPWmgzsr8sDecVqFcSflLfU0bPMBLWt2QNhkVfejR8fRP9UErzDffIHfJim3Affu39aP8FDGpfSIoPUmfDRT0cAz32_zD-0000)
+
+[![](https://img.plantuml.biz/plantuml/svg/XPFVIiCm5CRl-nHXDyAWBz2h3LPru5Hc1Ez2rXnj84rBSbeOc-zkahLhMXtUZ7xd9B_l_CbM5hd1jb990Xeb7idYtO9P46v9wpx8AI5aAGN9oFQPvW_vtkaqTJ-QL-2YDF-WJXsamP89ZZwsMTFSnGgFwqzyZ_mDTB80GeyD11iHD4EdRxlvB8ijVm4ZrWNZgfTSCTrM1zV7jT8HD_EPDYJ05aOsA6iz1YkksqzUO6jYObcxISrf1hwaHSCzO9WBtUxoDxhUlSRLF_hReVZ0kJq2BeG1QqVVmi3_UB_DTFJmEsMHKT0pj-KV3KL42WegG7CCG1pKXTSlqqP3MqBdhZAKrRJ8lgq-wxT_lT9nrNfv__IozbgvGohQ_1tPWmgzsr8sDecVqFcSflLfU0bPMBLWt2QNhkVfejR8fRP9UErzDffIHfJim3Affu39aP8FDGpfSIoPUmfDRT0cAz32_zD-0000)](https://editor.plantuml.com/uml/XPFVIiCm5CRl-nHXDyAWBz2h3LPru5Hc1Ez2rXnj84rBSbeOc-zkahLhMXtUZ7xd9B_l_CbM5hd1jb990Xeb7idYtO9P46v9wpx8AI5aAGN9oFQPvW_vtkaqTJ-QL-2YDF-WJXsamP89ZZwsMTFSnGgFwqzyZ_mDTB80GeyD11iHD4EdRxlvB8ijVm4ZrWNZgfTSCTrM1zV7jT8HD_EPDYJ05aOsA6iz1YkksqzUO6jYObcxISrf1hwaHSCzO9WBtUxoDxhUlSRLF_hReVZ0kJq2BeG1QqVVmi3_UB_DTFJmEsMHKT0pj-KV3KL42WegG7CCG1pKXTSlqqP3MqBdhZAKrRJ8lgq-wxT_lT9nrNfv__IozbgvGohQ_1tPWmgzsr8sDecVqFcSflLfU0bPMBLWt2QNhkVfejR8fRP9UErzDffIHfJim3Affu39aP8FDGpfSIoPUmfDRT0cAz32_zD-0000)
+
+# ❌ Задание 4. Создание и документирование API
 
 ### 1. Тип API
 
