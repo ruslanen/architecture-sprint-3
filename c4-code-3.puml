@@ -1,0 +1,82 @@
+@startuml
+title Диаграмма кода компонента сервиса управления и стриминга веб-камерами
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+class DeviceController {
+  +DeviceService deviceService
+  +ResponseEntity<DeviceDto> registerDevice(DeviceRegistrationDto dto)
+  +ResponseEntity<Void> updateDevice(String deviceId, DeviceUpdateDto dto)
+  +ResponseEntity<DeviceStatusDto> getDeviceStatus(String deviceId)
+  +ResponseEntity<List<DeviceDto>> getUserDevices(String userId)
+}
+
+class VideoStreamingController {
+  +StreamingService streamingService
+  +ResponseEntity<StreamSessionDto> startStreaming(String deviceId)
+  +ResponseEntity<Void> stopStreaming(String sessionId)
+  +ResponseEntity<Resource> getLiveStream(String sessionId, String quality)
+  +ResponseEntity<Void> sendStreamCommand(String sessionId, StreamCommand command)
+}
+
+class VideoArchiveController {
+  +ArchiveService archiveService
+  +ResponseEntity<ArchiveAccessDto> requestArchiveAccess(ArchiveRequest request)
+  +ResponseEntity<List<ArchiveRecordDto>> getArchiveRecords(String deviceId, Instant from, Instant to)
+  +ResponseEntity<Resource> getArchiveSegment(String recordId, String segment)
+}
+
+class MetricsController {
+  +MetricsService metricsService
+  +ResponseEntity<DeviceMetricsDto> getCurrentMetrics(String deviceId)
+  +ResponseEntity<List<MetricsHistoryDto>> getMetricsHistory(String deviceId, MetricsPeriod period)
+  +ResponseEntity<Void> uploadMetrics(String deviceId, MetricsUploadDto metrics)
+}
+
+class DeviceService {
+  +DeviceRepository deviceRepository
+  +Device registerDevice(DeviceRegistration registration)
+  +Device updateDevice(String deviceId, DeviceUpdate update)
+  +DeviceStatus getDeviceStatus(String deviceId)
+}
+
+class StreamingService {
+  +StreamProcessor streamProcessor
+  +StreamSession startStreaming(String deviceId)
+  +void stopStreaming(String sessionId)
+  +void handleStreamError(String sessionId)
+}
+
+class ArchiveService {
+  +VideoStorage videoStorage
+  +ArchiveRecord createArchiveRecord(StreamSession session)
+  +ArchiveAccess grantAccess(ArchiveRequest request)
+  +VideoSegment getSegment(String recordId, String segment)
+}
+
+DeviceController --> DeviceService : uses
+VideoStreamingController --> StreamingService : uses
+VideoArchiveController --> ArchiveService : uses
+MetricsController --> MetricsService : uses
+
+DeviceService --> DeviceRepository : depends
+StreamingService --> StreamProcessor : delegates
+ArchiveService --> VideoStorage : depends
+
+note top of DeviceController
+  Основной контроллер для управления
+  устройствами (веб-камерами).
+  Обрабатывает CRUD операции и
+  статус устройств.
+end note
+
+note right of VideoStreamingController
+  Контроллер реального времени:
+  - Инициализация сессий
+  - Управление потоками
+  - Обработка команд (PTZ и др.)
+end note
+
+@enduml

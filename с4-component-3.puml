@@ -1,0 +1,40 @@
+@startuml
+
+title Диаграмма компонентов сервиса управления и стриминга с веб-камер
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(HeatManagementService, "Сервис управления и стриминга с веб-камер") {
+  Container(WebApp, "Веб приложение", "Java, Spring", "Осуществляет менеджмент каждого доступного настроенного реле отопления")
+  Container(OLTPDatabase, "База данных", "PostgreSQL", "Хранит данные об устройствах")
+  Container(OLAPDatabase, "База данных", "ClickHouse", "Хранит данные о метриках с датчиков")
+  Container(FileStorage, "Файловое хранилище", "S3", "Хранит видеозаписи с камер наблюдения")
+}
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(DeviceController, "DeviceController", "Обрабатывает запросы на управление веб-камерой")
+  Component(MetricsController, "MetricsController", "Обрабатывает запросы на получение метрик")
+  Component(VideoStreamingController, "VideoStreamingController", "Обрабатывает запросы на получение доступа в веб-камере к режиме реального времени")
+  Component(VideoArchiveController, "VideoArchiveController", "Обрабатывает запросы на получение потокового видео посредством работы с протоколом HLS (HTTP Live Streaming)")
+  Component(ServiceLayer, "Service Layer", "Бизнес-логика")
+  Component(DeviceRepository, "Device Repository Layer", "Логика доступа к данным")
+  Component(MetricsRepository, "Metrics Repository Layer", "Логика доступа к данным")
+  Component(VideoArhiveRepository, "Video Archive Repository Layer", "Логика доступа к данным")
+}
+
+Rel(DeviceController,ServiceLayer,"Вызывает бизнес логику")
+Rel(MetricsController,ServiceLayer,"Вызывает бизнес логику")
+Rel(VideoStreamingController,ServiceLayer,"Вызывает бизнес логику")
+Rel(VideoArchiveController,ServiceLayer,"Вызывает бизнес логику")
+
+Rel(ServiceLayer,DeviceRepository,"Записывает/читает данные")
+Rel(ServiceLayer,MetricsRepository,"Записывает/читает данные")
+Rel(ServiceLayer,VideoArhiveRepository,"Записывает/читает данные")
+
+Rel(DeviceRepository,OLTPDatabase,"Записывает/читает данные устройств")
+Rel(MetricsRepository,OLAPDatabase,"Записывает/читает данные устройств")
+Rel(VideoArhiveRepository,FileStorage,"Записывает/читает данные устройств")
+
+@enduml

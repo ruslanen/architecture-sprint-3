@@ -1,0 +1,21 @@
+@startuml
+
+title Контекстная диаграмма «Тёплый дом»
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "Клиент", "Клиент использующий мобильное приложение «Тёплый дом»")
+Person(admin, "Специалист по обслуживанию", "Производит настройку устройств у клиентов")
+System(WarmHouseSystem, "Система «Тёплый дом»", "Система управления и мониторинга отопительным оборудованием")
+
+System_Ext(heatManagementRelay, "Реле управления отоплением", "Физическое устройство для включения или отключения подачи отопления")
+System_Ext(temperatureSensor, "Датчик температуры", "Физическое устройство для сбора данных о температуре окружающей среды")
+
+Rel(user, WarmHouseSystem, "Использует систему")
+Rel(admin,WarmHouseSystem,"Управляет подключением к системе")
+Rel(WarmHouseSystem,heatManagementRelay,"Отправляет запросы на регулирование температуры")
+Rel(WarmHouseSystem,temperatureSensor,"Запрашивает данные температуры")
+
+@enduml
